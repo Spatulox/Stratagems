@@ -14,6 +14,9 @@ import com.stevekung.stratagems.registry.ModEntities;
 import com.stevekung.stratagems.registry.Stratagems;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -22,6 +25,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.VariantHolder;
@@ -36,6 +40,8 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
 {
     private static final EntityDataAccessor<Holder<Stratagem>> DATA_STRATAGEM = SynchedEntityData.defineId(StratagemBall.class, ModEntityDataSerializers.STRATAGEM);
     private static final EntityDataAccessor<StratagemInstance.Side> DATA_STRATAGEM_SIDE = SynchedEntityData.defineId(StratagemBall.class, ModEntityDataSerializers.STRATAGEM_SIDE);
+    private Item defaultItem = Items.SNOWBALL;
+    private EntityType<?> customEntityType = null;
 
     public StratagemBall(EntityType<? extends StratagemBall> entityType, Level level)
     {
@@ -88,19 +94,48 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     {
         super.addAdditionalSaveData(compound);
         this.getVariant().unwrapKey().ifPresent(resourceKey -> compound.putString(ModConstants.Tag.VARIANT, resourceKey.location().toString()));
+        if (customEntityType != null) {
+            ResourceLocation entityRes = ResourceLocation.tryParse(compound.getString("CustomEntityType"));
+            if (entityRes != null) {
+                this.customEntityType = BuiltInRegistries.ENTITY_TYPE.get(entityRes);
+            }
+        }
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compound)
-    {
+    public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        Optional.ofNullable(ResourceLocation.tryParse(compound.getString(ModConstants.Tag.VARIANT))).map(resourceLocation -> ResourceKey.create(ModRegistries.STRATAGEM, resourceLocation)).flatMap(resourceKey -> this.registryAccess().registryOrThrow(ModRegistries.STRATAGEM).getHolder(resourceKey)).ifPresent(this::setVariant);
+        Optional.ofNullable(ResourceLocation.tryParse(compound.getString(ModConstants.Tag.VARIANT)))
+                .map(resourceLocation -> ResourceKey.create(ModRegistries.STRATAGEM, resourceLocation))
+                .flatMap(resourceKey -> this.registryAccess().registryOrThrow(ModRegistries.STRATAGEM).getHolder(resourceKey))
+                .ifPresent(this::setVariant);
+
+        if (compound.contains("CustomEntityType", 8)) {
+            ResourceLocation entityRes = ResourceLocation.tryParse(compound.getString("CustomEntityType"));
+            if (entityRes != null) {
+                ResourceKey<EntityType<?>> resourceKey = ResourceKey.create(Registries.ENTITY_TYPE, entityRes);
+                this.customEntityType = this.level().registryAccess().registryOrThrow(Registries.ENTITY_TYPE).get(resourceKey);
+            }
+        }
     }
 
     @Override
     protected Item getDefaultItem()
     {
-        return Items.SNOWBALL;
+        return this.defaultItem;
+    }
+
+    public void setThrowable(Item item) {
+        this.defaultItem = item;
+        this.customEntityType = null;
+    }
+
+    public void setThrowable(EntityType<?> entityType) {
+        this.customEntityType = entityType;
+    }
+
+    public EntityType<?> getCustomEntityType() {
+        return this.customEntityType;
     }
 
     @Override
@@ -113,49 +148,53 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     }
 
     @Override
-    protected void onHit(HitResult result)
-    {
+    protected void onHit(HitResult result) {
         super.onHit(result);
 
-        if (this.level() instanceof ServerLevel serverLevel)
-        {
+        if (this.level() instanceof ServerLevel serverLevel) {
+
+            if (customEntityType != null) {
+                Entity customEntity = customEntityType.create(serverLevel);
+                if (customEntity != null) {
+                    customEntity.moveTo(this.blockPosition(), this.getYRot(), this.getXRot());
+                    serverLevel.addFreshEntity(customEntity);
+                }
+            }
+
             var holder = this.getVariant();
             var stratagemPod = new StratagemPod(ModEntities.STRATAGEM_POD, this.level());
             stratagemPod.setVariant(holder);
             stratagemPod.setOwner(this.getOwner());
             stratagemPod.moveTo(this.blockPosition(), 0.0f, 0.0f);
 
-            if (this.getOwner() instanceof ServerPlayer serverPlayer)
-            {
-                var stratagemsData = this.getSide() == StratagemInstance.Side.SERVER ? serverLevel.getServer().overworld().stratagemsData() : serverPlayer.stratagemsData();
+            if (this.getOwner() instanceof ServerPlayer serverPlayer) {
+                var stratagemsData = this.getSide() == StratagemInstance.Side.SERVER
+                        ? serverLevel.getServer().overworld().stratagemsData()
+                        : serverPlayer.stratagemsData();
 
-                if (stratagemsData.canUse(holder, serverPlayer))
-                {
+                if (stratagemsData.canUse(holder, serverPlayer)) {
                     stratagemsData.use(holder, serverPlayer);
                     stratagemPod.setInboundTick(stratagemsData.instanceByHolder(holder).inboundDuration);
 
-                    if (this.getSide() == StratagemInstance.Side.SERVER)
-                    {
-                        PacketUtils.sendClientUpdatePacketS2P(this.getServer(), UpdateStratagemPacket.Action.UPDATE, stratagemsData.instanceByHolder(holder));
+                    if (this.getSide() == StratagemInstance.Side.SERVER) {
+                        PacketUtils.sendClientUpdatePacketS2P(this.getServer(),
+                                UpdateStratagemPacket.Action.UPDATE,
+                                stratagemsData.instanceByHolder(holder));
+                    } else {
+                        PacketUtils.sendClientUpdatePacket2P(serverPlayer,
+                                UpdateStratagemPacket.Action.UPDATE,
+                                stratagemsData.instanceByHolder(holder));
                     }
-                    else
-                    {
-                        PacketUtils.sendClientUpdatePacket2P(serverPlayer, UpdateStratagemPacket.Action.UPDATE, stratagemsData.instanceByHolder(holder));
-                    }
-                }
-                else
-                {
+                } else {
                     var instance = stratagemsData.instanceByHolder(holder);
-                    ModConstants.LOGGER.info("{}", Component.translatable("commands.stratagem.use.failed", instance.stratagem().name(), instance.state.getTranslationName()).getString());
+                    ModConstants.LOGGER.info("{}", Component.translatable("commands.stratagem.use.failed",
+                            instance.stratagem().name(), instance.state.getTranslationName()).getString());
                 }
-            }
-            else
-            {
+            } else {
                 ModConstants.LOGGER.warn("Stratagem owner is {} rather than a player!", this.getOwner());
             }
 
             this.level().addFreshEntity(stratagemPod);
-
             this.playSound(StratagemSounds.STRATAGEM_LAND, 1f, 1.0f);
             this.discard();
         }
