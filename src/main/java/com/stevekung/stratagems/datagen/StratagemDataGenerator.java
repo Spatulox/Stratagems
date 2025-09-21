@@ -29,8 +29,9 @@ public class StratagemDataGenerator implements DataGeneratorEntrypoint
         var pack = dataGenerator.createPack();
         pack.addProvider(DynamicRegistryProvider::new);
 
-        new TestStratagemPackGenerator().onInitializeDataGenerator(dataGenerator);
-        new EnderDragonStratagemPackGenerator().onInitializeDataGenerator(dataGenerator);
+        //new TestStratagemPackGenerator().onInitializeDataGenerator(dataGenerator);
+        //new EnderDragonStratagemPackGenerator().onInitializeDataGenerator(dataGenerator);
+        new StratagemDataGenerator(); // Ensure the DataGenerator is called, to generate data with the StratagemRegistry
     }
 
     @Override
