@@ -39,10 +39,15 @@ fabricApi {
 }
 
 String fileName = "${archives_base_name}-mc${minecraft_version}"
-//List<String> devExcludes = [".cache", "**/datagen/"]
+List<String> devExcludes = [
+        ".cache",
+        "**/datagen/EnderDragon*",
+        "**/datagen/StratagemTagsProvider*",
+        "**/datagen/TestStratagemPackGenerator*"
+]
 
 jar {
-    //excludes = devExcludes
+    excludes = devExcludes
 }
 
 remapJar {
