@@ -41,7 +41,7 @@ public class Stratagems
 
     public static void bootstrap(BootstrapContext<Stratagem> context)
     {
-        register(context, REINFORCE, "wsdaw", new StratagemDisplay(StratagemDisplay.Type.PLAYER_ICON, Optional.empty(), Optional.empty(), Optional.of(new ResolvableProfile(Optional.empty(), Optional.empty(), Util.make(new PropertyMap(), map -> map.put("name", new Property("textures", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjZhNzZjYzIyZTdjMmFiOWM1NDBkMTI0NGVhZGJhNTgxZjVkZDllMThmOWFkYWNmMDUyODBhNWI0OGI4ZjYxOCJ9fX0"))))), true, Optional.empty()), ReinforceAction.reinforce(), ReinforceRule.defaultRule(), StratagemProperties.withDepletedAndReplenish(0, 2400, 20, ModConstants.BLUE_BEAM_COLOR));
+        register(context, REINFORCE, "wsdaw", new StratagemDisplay(StratagemDisplay.Type.PLAYER_ICON, Optional.empty(), Optional.of(ModConstants.id("textures/stratagem/reinforcement.png")), Optional.empty(), true, Optional.empty()), ReinforceAction.reinforce(), ReinforceRule.defaultRule(), StratagemProperties.withDepletedAndReplenish(0, 2400, 20, ModConstants.BLUE_BEAM_COLOR));
     }
 
     public static void bootstrapTest(BootstrapContext<Stratagem> context)
