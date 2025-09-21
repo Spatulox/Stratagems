@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import com.google.common.collect.Lists;
 import com.stevekung.stratagems.api.Stratagem;
 import com.stevekung.stratagems.api.references.ModRegistries;
+import com.stevekung.stratagems.registry.StratagemRegistry;
 import com.stevekung.stratagems.registry.Stratagems;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
@@ -44,8 +45,9 @@ public class StratagemDataGenerator implements DataGeneratorEntrypoint
     @Override
     public void buildRegistry(RegistrySetBuilder builder)
     {
-        builder.add(ModRegistries.STRATAGEM, Stratagems::bootstrap);
+        builder.add(ModRegistries.STRATAGEM, StratagemRegistry::bootstrap);
     }
+
 
     private static class DynamicRegistryProvider extends FabricDynamicRegistryProvider
     {
