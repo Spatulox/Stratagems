@@ -144,6 +144,13 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
         StratagemBall.throwableBlock = null;
         StratagemBall.item = null;
     }
+    protected void removeTag()
+    {
+        if (this.getOwner() instanceof ServerPlayer player)
+        {
+            player.removeTag(ModConstants.Tag.HAS_STRATAGEM_HAND);
+        }
+    }
 
     @Override
     protected void onHitEntity(EntityHitResult result)
@@ -224,6 +231,7 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
                 }
             }
         } finally {
+            this.removeTag();
         }
     }
 }

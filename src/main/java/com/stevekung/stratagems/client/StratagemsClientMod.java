@@ -251,6 +251,7 @@ public class StratagemsClientMod implements ClientModInitializer
                     manager.setMenuOpen(false);
 
                     LOGGER.info("Select {}", manager.getSelected().stratagem().name().getString());
+                    player.addTag(ModConstants.Tag.HAS_STRATAGEM_HAND);
                 }
             }
 

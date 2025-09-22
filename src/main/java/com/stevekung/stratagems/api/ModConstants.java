@@ -80,5 +80,7 @@ public interface ModConstants
         String SIDE = "side";
         String SHOULD_DISPLAY = "should_display";
         String MODIFIER = "modifier";
+
+        String HAS_STRATAGEM_HAND = "has_stratagem_in_hand";
     }
 }
