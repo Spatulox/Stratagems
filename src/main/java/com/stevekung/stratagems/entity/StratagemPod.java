@@ -3,6 +3,9 @@ package com.stevekung.stratagems.entity;
 import java.util.Optional;
 import java.util.UUID;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 
 import com.stevekung.stratagems.api.ModConstants;
@@ -35,10 +38,24 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
     private Entity cachedOwner;
     private int inboundTick;
 
+    @Nullable
+    private Block linkedBlock;
+    @Nullable
+    private BlockPos linkedBlockPos;
+
     public StratagemPod(EntityType<? extends StratagemPod> entityType, Level level)
     {
         super(entityType, level);
         this.noCulling = true;
+    }
+
+
+    public void setLinkedBlock(Block block) {
+        this.linkedBlock = block;
+    }
+
+    public void setBlockPosition(BlockPos blockpos) {
+        this.linkedBlockPos = blockpos;
     }
 
     @Override
@@ -53,6 +70,11 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
 
         if (!this.level().isClientSide() && this.inboundTick == 0 && this.getOwner() instanceof ServerPlayer serverPlayer)
         {
+            if (this.linkedBlock != null)
+            {
+                this.level().destroyBlock(this.linkedBlockPos, false);
+                this.level().sendBlockUpdated(this.linkedBlockPos, this.linkedBlock.defaultBlockState(), Blocks.AIR.defaultBlockState(), 3);
+            }
             var holder = this.getVariant();
             var stratagemContext = new StratagemActionContext(serverPlayer, (ServerLevel) this.level(), this.blockPosition(), this.random);
             holder.value().action().action(stratagemContext);
