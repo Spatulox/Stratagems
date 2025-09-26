@@ -22,6 +22,24 @@ public class StratagemRegistry
     private static final Map<String, Stratagem> LOCAL_STRATAGEMS = new ConcurrentHashMap<>();
     public static final Map<ResourceKey<Stratagem>, Stratagem> STRATAGEMS = new ConcurrentHashMap<>();
 
+    private static boolean isFrozen = false;
+    private static Runnable onFreeze = null;
+
+    public static boolean isFrozen() {
+        return isFrozen;
+    }
+
+    public static void freeze() {
+        isFrozen = true;
+        if (onFreeze != null) {
+            onFreeze.run();
+        }
+    }
+
+    public static void setOnFreeze(Runnable callback) {
+        onFreeze = callback;
+    }
+
     /**
      * Enregistre un stratagem sous une clé unique.
      * @param key La clé ResourceLocation du stratagem (ex: modid:stratagem_name)
@@ -70,10 +88,9 @@ public class StratagemRegistry
      */
     public static void bootstrap(BootstrapContext<Stratagem> context)
     {
-        if(LOCAL_STRATAGEMS.size() <= 0){
-            return;
-        }
+        System.out.println("Bootstrap Stratagems");
         LOCAL_STRATAGEMS.forEach((keyString, stratagem) -> {
+            System.out.println(keyString);
             ResourceKey<Stratagem> key = ResourceKey.create(ModRegistries.STRATAGEM, ModConstants.id(keyString));
             STRATAGEMS.put(key, stratagem);
             context.register(key, stratagem);
