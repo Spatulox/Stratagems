@@ -32,7 +32,7 @@ public class StratagemDataGenerator implements DataGeneratorEntrypoint
         //new TestStratagemPackGenerator().onInitializeDataGenerator(dataGenerator);
         //new EnderDragonStratagemPackGenerator().onInitializeDataGenerator(dataGenerator);
         //new StratagemDataGenerator(); // Ensure the DataGenerator is called, to generate data with the StratagemRegistry
-        //new StratagemRegistryPackGenerator();
+        new StratagemRegistryPackGenerator().onInitializeDataGenerator(dataGenerator);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class StratagemDataGenerator implements DataGeneratorEntrypoint
     @Override
     public void buildRegistry(RegistrySetBuilder builder)
     {
-        builder.add(ModRegistries.STRATAGEM, Stratagems::bootstrap);
+        builder.add(ModRegistries.STRATAGEM, StratagemRegistry::bootstrap);
     }
 
 

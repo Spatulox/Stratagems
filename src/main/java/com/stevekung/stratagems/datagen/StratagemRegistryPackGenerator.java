@@ -29,16 +29,19 @@ public class StratagemRegistryPackGenerator extends StratagemDataGenerator {
 
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
-        StratagemRegistry.setOnFreeze(() -> {
-            var pack = fabricDataGenerator.createPack();
-            //var pack = dataGenerator.createPack();
+        //StratagemRegistry.setOnFreeze(() -> {
+
+            var pack = fabricDataGenerator.createBuiltinResourcePack(ModConstants.id("stratagem_test_pack"));
+            //@formatter:off
             var extraProvider = RegistryPatchGenerator.createLookup(fabricDataGenerator.getRegistries(), new RegistrySetBuilder()
                     .add(ModRegistries.STRATAGEM, StratagemRegistry::bootstrap)
             ).thenApply(RegistrySetBuilder.PatchedRegistries::full);
+            //@formatter:on
 
             pack.addProvider((output, provider) -> new DynamicRegistryProvider(output, extraProvider));
-            pack.addProvider((output, provider) -> forFeaturePack(output, Component.translatable("dataPack.stratagem_registry_pack.description")));
-        });
+            pack.addProvider((output, provider) -> forFeaturePack(output, Component.translatable("dataPack.stratagem_test_pack.description")));
+
+        //});
     }
 
     public static CompletableFuture<HolderLookup.Provider> getProvider(FabricDataGenerator dataGenerator){
@@ -48,42 +51,9 @@ public class StratagemRegistryPackGenerator extends StratagemDataGenerator {
         ).thenApply(RegistrySetBuilder.PatchedRegistries::full);
     }
 
-    public static void setPack(FabricDataGenerator.Pack pack){
-        StratagemRegistryPackGenerator.pack = pack;
-    }
-
-    // Première méthode
-    public static void generateProvider(FabricDataGenerator dataGenerator) {
-        StratagemRegistry.setOnFreeze(() -> {
-            //var pack = dataGenerator.createPack();
-            var extraProvider = RegistryPatchGenerator.createLookup(dataGenerator.getRegistries(), new RegistrySetBuilder()
-                    .add(ModRegistries.STRATAGEM, StratagemRegistry::bootstrap)
-            ).thenApply(RegistrySetBuilder.PatchedRegistries::full);
-
-            pack.addProvider((output, provider) -> new DynamicRegistryProvider(output, extraProvider));
-            pack.addProvider((output, provider) -> forFeaturePack(output, Component.translatable("dataPack.stratagem_registry_pack.description")));
-        });
-    }
-
-    // Deuxième méthode
-    public static void generateProviders(FabricDataGenerator.Pack pack, FabricDataGenerator dataGenerator) {
-        System.out.println("Generate Provider");
-
-        CompletableFuture<HolderLookup.Provider> extraProvider = RegistryPatchGenerator.createLookup(
-                dataGenerator.getRegistries(),
-                new RegistrySetBuilder().add(ModRegistries.STRATAGEM, StratagemRegistry::bootstrap)
-        ).thenApply(RegistrySetBuilder.PatchedRegistries::full);
-
-        extraProvider.thenAccept(provider -> {
-            System.out.println("Registry provider ready");
-        });
-
-        pack.addProvider((output, registries) -> new DynamicRegistryProvider(output, extraProvider));
-        pack.addProvider((output, registries) -> forFeaturePack(output, Component.translatable("dataPack.stratagem_registry_pack.description")));
-    }
-
     @Override
     public void buildRegistry(RegistrySetBuilder builder) {
+        System.out.println("Building Registry");
         builder.add(ModRegistries.STRATAGEM, StratagemRegistry::bootstrap);
     }
 
@@ -95,6 +65,8 @@ public class StratagemRegistryPackGenerator extends StratagemDataGenerator {
         @Override
         protected void configure(HolderLookup.Provider registries, Entries entries) {
             entries.addAll(registries.lookupOrThrow(ModRegistries.STRATAGEM));
+            var stratagems = registries.lookupOrThrow(ModRegistries.STRATAGEM);
+            System.out.println("Stratagems to generate: " + stratagems.listElements().toArray().length );
         }
 
         @Override
