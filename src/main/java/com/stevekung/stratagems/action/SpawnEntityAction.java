@@ -34,7 +34,8 @@ public record SpawnEntityAction(EntityType<?> entityType) implements StratagemAc
             var entity = entityType.create(level);
             if (entity != null)
             {
-                entity.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0);
+                int randomYaw = (int)(Math.random() * 361);
+                entity.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, randomYaw, 0);
                 level.addFreshEntity(entity);
             }
         }
