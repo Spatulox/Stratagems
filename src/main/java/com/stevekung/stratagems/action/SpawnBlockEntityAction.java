@@ -28,21 +28,6 @@ public record SpawnBlockEntityAction(BlockState blockState) implements Stratagem
         return StratagemActionTypes.SPAWN_BLOCK_ENTITY;
     }
 
-    /*@Override
-    public void action(StratagemActionContext context)
-    {
-        var level = context.level();
-        BlockPos pos = context.blockPos();
-
-        level.setBlockAndUpdate(pos, this.blockState);
-
-        BlockEntity be = level.getBlockEntity(pos);
-        if (be != null)
-        {
-            be.setChanged();
-        }
-    }*/
-
     @Override
     public void action(StratagemActionContext context)
     {
