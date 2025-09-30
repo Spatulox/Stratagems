@@ -38,6 +38,7 @@ public class Stratagems
     public static final ResourceKey<Stratagem> FAST_TNT = createKey("fast_tnt");
     public static final ResourceKey<Stratagem> LONG_TNT = createKey("long_tnt");
     public static final ResourceKey<Stratagem> TNT_REARM = createKey("tnt_rearm");
+    public static final ResourceKey<Stratagem> ENTITY = createKey("entity");
 
     public static void bootstrap(BootstrapContext<Stratagem> context)
     {
@@ -55,6 +56,7 @@ public class Stratagems
         register(context, FAST_TNT, "wdsw", new StratagemDisplay(StratagemDisplay.Type.ITEM, Optional.of(new ItemStack(Items.TNT)), Optional.empty(), Optional.empty(), false, Optional.of("F")), SpawnBombAction.spawnBomb(40), DepletedAndRearmRule.defaultRule(), StratagemProperties.withReplenish(40, 60, 3, ModConstants.RED_BEAM_COLOR, new StratagemReplenish(Optional.of(TNT_REARM), "tnt", Optional.empty(), Optional.empty())));
         register(context, LONG_TNT, "awdw", Items.TNT, SpawnBombAction.spawnBomb(100, Blocks.DIAMOND_BLOCK.defaultBlockState()), DepletedAndRearmRule.defaultRule(), StratagemProperties.withReplenish(40, 60, 1, ModConstants.RED_BEAM_COLOR, new StratagemReplenish(Optional.of(TNT_REARM), "tnt", Optional.empty(), Optional.empty())));
         register(context, TNT_REARM, "wwawd", Items.REDSTONE_TORCH, EmptyAction.empty(), ReplenishRule.defaultRule(), new StratagemProperties(0, -1, 1200, -1, 0, false, false, Optional.of(new StratagemReplenish(Optional.empty(), "tnt", Optional.of(context.lookup(ModRegistries.STRATAGEM).getOrThrow(ModConstants.StratagemTag.TNT_REPLENISH)), Optional.of(SoundEvents.BEACON_ACTIVATE)))));
+        register(context, ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnEntityAction.spawnEntity(EntityType.ZOMBIE), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
     }
 
     static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, ItemLike icon, StratagemAction.Builder action, StratagemRule.Builder rule, StratagemProperties properties)

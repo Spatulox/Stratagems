@@ -17,6 +17,7 @@ public class StratagemActionTypes
     public static final StratagemActionType SPAWN_ITEM = new StratagemActionType(SpawnItemAction.CODEC);
     public static final StratagemActionType SPAWN_SUPPLY = new StratagemActionType(SpawnSupplyAction.CODEC);
     public static final StratagemActionType SPAWN_BOMB = new StratagemActionType(SpawnBombAction.CODEC);
+    public static final StratagemActionType SPAWN_ENTITY = new StratagemActionType(SpawnEntityAction.CODEC);
 
     public static void init()
     {
@@ -25,6 +26,7 @@ public class StratagemActionTypes
         register("spawn_item", SPAWN_ITEM);
         register("spawn_supply", SPAWN_SUPPLY);
         register("spawn_bomb", SPAWN_BOMB);
+        register("spawn_entity", SPAWN_ENTITY);
     }
 
     private static void register(String name, StratagemActionType type)
