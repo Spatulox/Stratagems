@@ -217,10 +217,8 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
                         break;
                     case BLOCK:
                         if (result.getType() == HitResult.Type.BLOCK && StratagemBall.throwableBlock != null) {
-                            BlockHitResult blockResult = (BlockHitResult) result;
-                            BlockPos placePos = blockResult.getBlockPos().relative(blockResult.getDirection());
-                            serverLevel.setBlockAndUpdate(placePos, StratagemBall.throwableBlock.defaultBlockState());
-                            stratagemPod.setBlockPosition(placePos);
+                            serverLevel.setBlockAndUpdate(this.blockPosition(), StratagemBall.throwableBlock.defaultBlockState());
+                            stratagemPod.setBlockPosition(this.blockPosition());
                         }
                         break;
                     case ENTITY:

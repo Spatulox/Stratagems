@@ -70,7 +70,7 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
 
         if (!this.level().isClientSide() && this.inboundTick == 0 && this.getOwner() instanceof ServerPlayer serverPlayer)
         {
-            if (this.linkedBlock != null)
+            if (this.linkedBlock != null && this.linkedBlockPos != null)
             {
                 this.level().destroyBlock(this.linkedBlockPos, false);
                 this.level().sendBlockUpdated(this.linkedBlockPos, this.linkedBlock.defaultBlockState(), Blocks.AIR.defaultBlockState(), 3);
