@@ -4,26 +4,26 @@ import java.util.Optional;
 
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
-import com.stevekung.stratagems.action.ReinforceAction;
-import com.stevekung.stratagems.action.SpawnBombAction;
-import com.stevekung.stratagems.action.SpawnItemAction;
-import com.stevekung.stratagems.action.SpawnSupplyAction;
+import com.stevekung.stratagems.action.*;
 import com.stevekung.stratagems.api.*;
 import com.stevekung.stratagems.api.action.EmptyAction;
 import com.stevekung.stratagems.api.action.StratagemAction;
 import com.stevekung.stratagems.api.references.ModRegistries;
 import com.stevekung.stratagems.api.rule.*;
 
+import net.fabricmc.fabric.impl.biome.modification.BuiltInRegistryKeys;
 import net.minecraft.Util;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 
 public class Stratagems
@@ -38,7 +38,9 @@ public class Stratagems
     public static final ResourceKey<Stratagem> FAST_TNT = createKey("fast_tnt");
     public static final ResourceKey<Stratagem> LONG_TNT = createKey("long_tnt");
     public static final ResourceKey<Stratagem> TNT_REARM = createKey("tnt_rearm");
+
     public static final ResourceKey<Stratagem> ENTITY = createKey("entity");
+    public static final ResourceKey<Stratagem> BLOCK_ENTITY = createKey("block_entity");
 
     public static void bootstrap(BootstrapContext<Stratagem> context)
     {
@@ -56,7 +58,9 @@ public class Stratagems
         register(context, FAST_TNT, "wdsw", new StratagemDisplay(StratagemDisplay.Type.ITEM, Optional.of(new ItemStack(Items.TNT)), Optional.empty(), Optional.empty(), false, Optional.of("F")), SpawnBombAction.spawnBomb(40), DepletedAndRearmRule.defaultRule(), StratagemProperties.withReplenish(40, 60, 3, ModConstants.RED_BEAM_COLOR, new StratagemReplenish(Optional.of(TNT_REARM), "tnt", Optional.empty(), Optional.empty())));
         register(context, LONG_TNT, "awdw", Items.TNT, SpawnBombAction.spawnBomb(100, Blocks.DIAMOND_BLOCK.defaultBlockState()), DepletedAndRearmRule.defaultRule(), StratagemProperties.withReplenish(40, 60, 1, ModConstants.RED_BEAM_COLOR, new StratagemReplenish(Optional.of(TNT_REARM), "tnt", Optional.empty(), Optional.empty())));
         register(context, TNT_REARM, "wwawd", Items.REDSTONE_TORCH, EmptyAction.empty(), ReplenishRule.defaultRule(), new StratagemProperties(0, -1, 1200, -1, 0, false, false, Optional.of(new StratagemReplenish(Optional.empty(), "tnt", Optional.of(context.lookup(ModRegistries.STRATAGEM).getOrThrow(ModConstants.StratagemTag.TNT_REPLENISH)), Optional.of(SoundEvents.BEACON_ACTIVATE)))));
+
         register(context, ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnEntityAction.spawnEntity(EntityType.ZOMBIE), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
+        register(context, BLOCK_ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnBlockEntityAction.spawnBlockEntity(Blocks.FURNACE.defaultBlockState()), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
     }
 
     static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, ItemLike icon, StratagemAction.Builder action, StratagemRule.Builder rule, StratagemProperties properties)

@@ -1,9 +1,7 @@
 package com.stevekung.stratagems.registry;
 
-import com.stevekung.stratagems.action.ReinforceAction;
-import com.stevekung.stratagems.action.SpawnBombAction;
-import com.stevekung.stratagems.action.SpawnItemAction;
-import com.stevekung.stratagems.action.SpawnSupplyAction;
+import com.stevekung.stratagems.action.*;
+import com.stevekung.stratagems.action.SpawnEntityAction;
 import com.stevekung.stratagems.api.ModConstants;
 import com.stevekung.stratagems.api.action.StratagemActionType;
 import com.stevekung.stratagems.api.references.ModBuiltInRegistries;
@@ -17,6 +15,7 @@ public class StratagemActionTypes
     public static final StratagemActionType SPAWN_ITEM = new StratagemActionType(SpawnItemAction.CODEC);
     public static final StratagemActionType SPAWN_SUPPLY = new StratagemActionType(SpawnSupplyAction.CODEC);
     public static final StratagemActionType SPAWN_BOMB = new StratagemActionType(SpawnBombAction.CODEC);
+    public static final StratagemActionType SPAWN_BLOCK_ENTITY = new StratagemActionType(SpawnBlockEntityAction.CODEC);
     public static final StratagemActionType SPAWN_ENTITY = new StratagemActionType(SpawnEntityAction.CODEC);
 
     public static void init()
@@ -26,6 +25,7 @@ public class StratagemActionTypes
         register("spawn_item", SPAWN_ITEM);
         register("spawn_supply", SPAWN_SUPPLY);
         register("spawn_bomb", SPAWN_BOMB);
+        register("spawn_block_entity", SPAWN_BLOCK_ENTITY);
         register("spawn_entity", SPAWN_ENTITY);
     }
 
