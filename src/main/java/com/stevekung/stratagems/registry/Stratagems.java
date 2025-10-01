@@ -60,7 +60,7 @@ public class Stratagems
         register(context, TNT_REARM, "wwawd", Items.REDSTONE_TORCH, EmptyAction.empty(), ReplenishRule.defaultRule(), new StratagemProperties(0, -1, 1200, -1, 0, false, false, Optional.of(new StratagemReplenish(Optional.empty(), "tnt", Optional.of(context.lookup(ModRegistries.STRATAGEM).getOrThrow(ModConstants.StratagemTag.TNT_REPLENISH)), Optional.of(SoundEvents.BEACON_ACTIVATE)))));
 
         register(context, ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnEntityAction.spawnEntity(EntityType.ZOMBIE), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
-        register(context, BLOCK_ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnBlockEntityAction.spawnBlockEntity(Blocks.FURNACE.defaultBlockState()), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
+        register(context, BLOCK_ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnBlockAction.spawnBlock(Blocks.FURNACE.defaultBlockState()), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
     }
 
     static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, ItemLike icon, StratagemAction.Builder action, StratagemRule.Builder rule, StratagemProperties properties)

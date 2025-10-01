@@ -15,7 +15,7 @@ public class StratagemActionTypes
     public static final StratagemActionType SPAWN_ITEM = new StratagemActionType(SpawnItemAction.CODEC);
     public static final StratagemActionType SPAWN_SUPPLY = new StratagemActionType(SpawnSupplyAction.CODEC);
     public static final StratagemActionType SPAWN_BOMB = new StratagemActionType(SpawnBombAction.CODEC);
-    public static final StratagemActionType SPAWN_BLOCK_ENTITY = new StratagemActionType(SpawnBlockEntityAction.CODEC);
+    public static final StratagemActionType SPAWN_BLOCK_ENTITY = new StratagemActionType(SpawnBlockAction.CODEC);
     public static final StratagemActionType SPAWN_ENTITY = new StratagemActionType(SpawnEntityAction.CODEC);
 
     public static void init()
