@@ -1,5 +1,6 @@
 package com.stevekung.stratagems.registry;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.mojang.authlib.properties.Property;
@@ -11,11 +12,12 @@ import com.stevekung.stratagems.api.action.StratagemAction;
 import com.stevekung.stratagems.api.references.ModRegistries;
 import com.stevekung.stratagems.api.rule.*;
 
-import net.fabricmc.fabric.impl.biome.modification.BuiltInRegistryKeys;
 import net.minecraft.Util;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +25,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 
 public class Stratagems
@@ -59,7 +60,7 @@ public class Stratagems
         register(context, LONG_TNT, "awdw", Items.TNT, SpawnBombAction.spawnBomb(100, Blocks.DIAMOND_BLOCK.defaultBlockState()), DepletedAndRearmRule.defaultRule(), StratagemProperties.withReplenish(40, 60, 1, ModConstants.RED_BEAM_COLOR, new StratagemReplenish(Optional.of(TNT_REARM), "tnt", Optional.empty(), Optional.empty())));
         register(context, TNT_REARM, "wwawd", Items.REDSTONE_TORCH, EmptyAction.empty(), ReplenishRule.defaultRule(), new StratagemProperties(0, -1, 1200, -1, 0, false, false, Optional.of(new StratagemReplenish(Optional.empty(), "tnt", Optional.of(context.lookup(ModRegistries.STRATAGEM).getOrThrow(ModConstants.StratagemTag.TNT_REPLENISH)), Optional.of(SoundEvents.BEACON_ACTIVATE)))));
 
-        register(context, ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnEntityAction.spawnEntity(EntityType.ZOMBIE), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
+        register(context, ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnEntityAction.spawnEntity(EntityType.ZOMBIE, 200.0, false), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
         register(context, BLOCK_ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnBlockAction.spawnBlock(Blocks.FURNACE.defaultBlockState()), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
     }
 
@@ -87,4 +88,102 @@ public class Stratagems
     {
         return ResourceKey.create(ModRegistries.STRATAGEM, ModConstants.id(name));
     }
+
+    public static boolean add(ServerPlayer player, ResourceKey<Stratagem> key) {
+        var stratagem = player.server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.add(player, stratagem);
+    }
+
+    public static boolean add(MinecraftServer server, ResourceKey<Stratagem> key) {
+        var stratagem = server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.add(server, stratagem);
+    }
+
+    public static boolean remove(ServerPlayer player, ResourceKey<Stratagem> key) {
+        var stratagem = player.server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.remove(player, stratagem);
+    }
+
+    public static boolean removeAll(ServerPlayer player) {
+        return StratagemManager.removeAll(player);
+    }
+
+    public static boolean removeAll(MinecraftServer server) {
+        return StratagemManager.removeAll(server);
+    }
+
+    public static List<StratagemInstance> list(ServerPlayer player) {
+        return StratagemManager.list(player);
+    }
+
+    public static List<StratagemInstance> list(MinecraftServer server) {
+        return StratagemManager.list(server);
+    }
+
+    public static boolean block(ServerPlayer player, ResourceKey<Stratagem> key) {
+        var stratagem = player.server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.block(player, stratagem, false);
+    }
+
+    public static boolean unblock(ServerPlayer player, ResourceKey<Stratagem> key) {
+        var stratagem = player.server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.block(player, stratagem, true);
+    }
+
+    public static boolean block(MinecraftServer server, ResourceKey<Stratagem> key) {
+        var stratagem = server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.block(server, stratagem, false);
+    }
+
+    public static boolean unblock(MinecraftServer server, ResourceKey<Stratagem> key) {
+        var stratagem = server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.block(server, stratagem, true);
+    }
+
+    public static boolean reset(ServerPlayer player, ResourceKey<Stratagem> key)
+    {
+        var stratagem = player.server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.reset(player, stratagem);
+    }
+
+    public static boolean reset(MinecraftServer server, ResourceKey<Stratagem> key)
+    {
+        var stratagem = server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.reset(server, stratagem);
+    }
+
+    public static boolean setModifier(ServerPlayer player, ResourceKey<Stratagem> key, StratagemModifier modifier, boolean clear)
+    {
+        var stratagem = player.server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.setModifier(player, stratagem, modifier, clear);
+    }
+
+    public static boolean setModifier(MinecraftServer server, ResourceKey<Stratagem> key, StratagemModifier modifier, boolean clear)
+    {
+        var stratagem = server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.setModifier(server, stratagem, modifier, clear);
+    }
+
 }
