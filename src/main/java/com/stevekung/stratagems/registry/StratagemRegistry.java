@@ -8,19 +8,17 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.stevekung.stratagems.api.references.ModRegistries;
-import net.minecraft.core.Registry;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 
 /**
  * Registre singleton pour permettre un enregistrement dynamique de Stratagems par d'autres mods.
  */
 public class StratagemRegistry
 {
-    // Collection thread-safe pour stocker les stratagems enregistrés
+    // Collections thread-safe pour stocker les stratagèmes et leurs clés
     private static final Map<String, Stratagem> LOCAL_STRATAGEMS = new ConcurrentHashMap<>();
-    public static final Map<ResourceKey<Stratagem>, Stratagem> STRATAGEMS = new ConcurrentHashMap<>();
+    private static final Map<String, ResourceKey<Stratagem>> LOCAL_KEYS = new ConcurrentHashMap<>();
 
     private static boolean isFrozen = false;
     private static Runnable onFreeze = null;
@@ -50,10 +48,11 @@ public class StratagemRegistry
     {
         if (LOCAL_STRATAGEMS.containsKey(key))
         {
-            // On peut logger un warning ici si besoin (stratagem déjà enregistré)
             return false;
         }
         LOCAL_STRATAGEMS.put(key, stratagem);
+        // Générer la clé ResourceKey associée et la stocker
+        LOCAL_KEYS.put(key, ResourceKey.create(ModRegistries.STRATAGEM, ModConstants.id(key)));
         return true;
     }
 
@@ -62,13 +61,22 @@ public class StratagemRegistry
      * @param key Clé ResourceLocation
      * @return Optional de Stratagem si trouvé.
      */
-    public static Optional<Stratagem> get(String key)
+    public static Optional<Stratagem> getStratagemByStratagemName(String key)
     {
         return Optional.ofNullable(LOCAL_STRATAGEMS.get(key));
     }
 
     /**
-     * Retourne une collection de tous les stratagems enregistrés.
+     * Récupère la ResourceKey associée à un stratagem enregistré via son nom.
+     * @param key Clé ResourceLocation
+     * @return Optional de ResourceKey<Stratagem> si trouvé.
+     */
+    public static Optional<ResourceKey<Stratagem>> getKeyByStratagemName(String key) {
+        return Optional.ofNullable(LOCAL_KEYS.get(key));
+    }
+
+    /**
+     * Retourne une collection de tous les stratagèmes enregistrés.
      */
     public static Collection<Stratagem> getAll()
     {
@@ -76,14 +84,7 @@ public class StratagemRegistry
     }
 
     /**
-     * Retourne la Map publique des ResourceKey et Stratagems enregistrés.
-     */
-    public static Map<ResourceKey<Stratagem>, Stratagem> getRegisteredStratagems() {
-        return STRATAGEMS;
-    }
-
-    /**
-     * Méthode à appeler depuis la génération datapack pour injecter tous les stratagems enregistrés.
+     * Méthode à appeler depuis la génération datapack pour injecter tous les stratagèmes enregistrés.
      * @param context BootstrapContext utilisé pour l'enregistrement
      */
     public static void bootstrap(BootstrapContext<Stratagem> context)
@@ -91,10 +92,8 @@ public class StratagemRegistry
         System.out.println("Bootstrap Stratagems");
         LOCAL_STRATAGEMS.forEach((keyString, stratagem) -> {
             System.out.println(keyString);
-            ResourceKey<Stratagem> key = ResourceKey.create(ModRegistries.STRATAGEM, ModConstants.id(keyString));
-            STRATAGEMS.put(key, stratagem);
+            ResourceKey<Stratagem> key = LOCAL_KEYS.get(keyString);
             context.register(key, stratagem);
         });
     }
-
 }
