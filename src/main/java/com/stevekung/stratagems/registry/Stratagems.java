@@ -64,22 +64,22 @@ public class Stratagems
         register(context, BLOCK_ENTITY, "saswd", Items.GLASS_BOTTLE, SpawnBlockAction.spawnBlock(Blocks.FURNACE.defaultBlockState()), StratagemProperties.simple(100, 6000, ModConstants.BLUE_BEAM_COLOR));
     }
 
-    static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, ItemLike icon, StratagemAction.Builder action, StratagemRule.Builder rule, StratagemProperties properties)
+    private static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, ItemLike icon, StratagemAction.Builder action, StratagemRule.Builder rule, StratagemProperties properties)
     {
         register(context, key, code, new StratagemDisplay(StratagemDisplay.Type.ITEM, Optional.of(new ItemStack(icon)), Optional.empty(), Optional.empty(), true, Optional.empty()), action, rule, properties);
     }
 
-    static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, StratagemDisplay display, StratagemAction.Builder action, StratagemProperties properties)
+    private static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, StratagemDisplay display, StratagemAction.Builder action, StratagemProperties properties)
     {
         register(context, key, code, display, action, DefaultRule.defaultRule(), properties);
     }
 
-    static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, ItemLike icon, StratagemAction.Builder action, StratagemProperties properties)
+    private static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, ItemLike icon, StratagemAction.Builder action, StratagemProperties properties)
     {
         register(context, key, code, new StratagemDisplay(StratagemDisplay.Type.ITEM, Optional.of(new ItemStack(icon)), Optional.empty(), Optional.empty(), true, Optional.empty()), action, DefaultRule.defaultRule(), properties);
     }
 
-    static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, StratagemDisplay display, StratagemAction.Builder action, StratagemRule.Builder rule, StratagemProperties properties)
+    private static void register(BootstrapContext<Stratagem> context, ResourceKey<Stratagem> key, String code, StratagemDisplay display, StratagemAction.Builder action, StratagemRule.Builder rule, StratagemProperties properties)
     {
         context.register(key, new Stratagem(code, Component.translatable(key.location().toLanguageKey("stratagem")), display, action.build(), rule.build(), properties));
     }
@@ -89,6 +89,12 @@ public class Stratagems
         return ResourceKey.create(ModRegistries.STRATAGEM, ModConstants.id(name));
     }
 
+    /**
+     * Make one Stratagem available to a player
+     * @param player
+     * @param key
+     * @return
+     */
     public static boolean add(ServerPlayer player, ResourceKey<Stratagem> key) {
         var stratagem = player.server.registryAccess()
                 .registryOrThrow(ModRegistries.STRATAGEM)
@@ -96,6 +102,12 @@ public class Stratagems
         return StratagemManager.add(player, stratagem);
     }
 
+    /**
+     * Make one Stratagem available to the server
+     * @param server
+     * @param key
+     * @return
+     */
     public static boolean add(MinecraftServer server, ResourceKey<Stratagem> key) {
         var stratagem = server.registryAccess()
                 .registryOrThrow(ModRegistries.STRATAGEM)
@@ -103,6 +115,12 @@ public class Stratagems
         return StratagemManager.add(server, stratagem);
     }
 
+    /**
+     * Remove one stratagem from the player
+     * @param player
+     * @param key
+     * @return
+     */
     public static boolean remove(ServerPlayer player, ResourceKey<Stratagem> key) {
         var stratagem = player.server.registryAccess()
                 .registryOrThrow(ModRegistries.STRATAGEM)
@@ -110,12 +128,26 @@ public class Stratagems
         return StratagemManager.remove(player, stratagem);
     }
 
+    /**
+     * Remove all the stratagems from the player
+     * @param player
+     * @return
+     */
     public static boolean removeAll(ServerPlayer player) {
         return StratagemManager.removeAll(player);
     }
 
-    public static boolean removeAll(MinecraftServer server) {
-        return StratagemManager.removeAll(server);
+    /**
+     * Remove all the stratagems from the server
+     * @param server
+     * @param key
+     * @return
+     */
+    public static boolean remove(MinecraftServer server, ResourceKey<Stratagem> key) {
+        var stratagem = server.registryAccess()
+                .registryOrThrow(ModRegistries.STRATAGEM)
+                .getHolderOrThrow(key);
+        return StratagemManager.remove(server, stratagem);
     }
 
     public static List<StratagemInstance> list(ServerPlayer player) {
@@ -126,6 +158,12 @@ public class Stratagems
         return StratagemManager.list(server);
     }
 
+    /**
+     * Jammed the Stratagem
+     * @param player
+     * @param key
+     * @return
+     */
     public static boolean block(ServerPlayer player, ResourceKey<Stratagem> key) {
         var stratagem = player.server.registryAccess()
                 .registryOrThrow(ModRegistries.STRATAGEM)
@@ -133,6 +171,12 @@ public class Stratagems
         return StratagemManager.block(player, stratagem, false);
     }
 
+    /**
+     * Unjammed the Stratagem
+     * @param player
+     * @param key
+     * @return
+     */
     public static boolean unblock(ServerPlayer player, ResourceKey<Stratagem> key) {
         var stratagem = player.server.registryAccess()
                 .registryOrThrow(ModRegistries.STRATAGEM)
@@ -140,6 +184,12 @@ public class Stratagems
         return StratagemManager.block(player, stratagem, true);
     }
 
+    /**
+     * Jammed the Stratagem
+     * @param server
+     * @param key
+     * @return
+     */
     public static boolean block(MinecraftServer server, ResourceKey<Stratagem> key) {
         var stratagem = server.registryAccess()
                 .registryOrThrow(ModRegistries.STRATAGEM)
@@ -147,6 +197,12 @@ public class Stratagems
         return StratagemManager.block(server, stratagem, false);
     }
 
+    /**
+     * Unjammed the Stratagem
+     * @param server
+     * @param key
+     * @return
+     */
     public static boolean unblock(MinecraftServer server, ResourceKey<Stratagem> key) {
         var stratagem = server.registryAccess()
                 .registryOrThrow(ModRegistries.STRATAGEM)
@@ -154,6 +210,12 @@ public class Stratagems
         return StratagemManager.block(server, stratagem, true);
     }
 
+    /**
+     * Reset the Stratagem to it's initial state
+     * @param player
+     * @param key
+     * @return
+     */
     public static boolean reset(ServerPlayer player, ResourceKey<Stratagem> key)
     {
         var stratagem = player.server.registryAccess()
@@ -162,6 +224,12 @@ public class Stratagems
         return StratagemManager.reset(player, stratagem);
     }
 
+    /**
+     * Reset the Stratagem to it's initial state
+     * @param server
+     * @param key
+     * @return
+     */
     public static boolean reset(MinecraftServer server, ResourceKey<Stratagem> key)
     {
         var stratagem = server.registryAccess()

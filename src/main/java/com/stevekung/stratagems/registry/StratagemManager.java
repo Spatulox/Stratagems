@@ -52,6 +52,16 @@ public class StratagemManager {
         return true;
     }
 
+    public static boolean remove(MinecraftServer server, Holder<Stratagem> stratagem) {
+        var stratagemsData = server.overworld().stratagemsData();
+        if (StratagemUtils.noneMatch(stratagemsData, stratagem)) {
+            return false;
+        }
+        PacketUtils.sendClientUpdateStratagemPacket(server, null, UpdateStratagemPacket.Action.REMOVE, stratagemsData.instanceByHolder(stratagem));
+        stratagemsData.remove(stratagem);
+        return true;
+    }
+
     public static boolean removeAll(ServerPlayer player) {
         player.stratagemsData().clear();
         player.connection.send(new ClientboundCustomPayloadPacket(new ClearStratagemsPacket(false, true, player.getUUID())));
