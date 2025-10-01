@@ -1,5 +1,6 @@
 package com.stevekung.stratagems.entity;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.stevekung.stratagems.api.ModConstants;
@@ -146,10 +147,7 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     }
     protected void removeTag()
     {
-        if (this.getOwner() instanceof ServerPlayer player)
-        {
-            player.removeTag(ModConstants.Tag.HAS_STRATAGEM_HAND);
-        }
+        Objects.requireNonNull(this.getOwner()).removeTag(ModConstants.Tag.HAS_STRATAGEM_HAND);
     }
 
     @Override
