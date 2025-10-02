@@ -15,9 +15,6 @@
         ],
         "client": [
             "com.stevekung.stratagems.client.StratagemsClientMod"
-        ],
-        "fabric-datagen": [
-            "com.stevekung.stratagems.datagen.StratagemDataGenerator"
         ]
     },
     "mixins": [
