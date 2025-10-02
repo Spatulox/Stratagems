@@ -84,7 +84,13 @@ public class Stratagems
         context.register(key, new Stratagem(code, Component.translatable(key.location().toLanguageKey("stratagem")), display, action.build(), rule.build(), properties));
     }
 
-    private static ResourceKey<Stratagem> createKey(String name)
+    /**
+     * This method is public so that other mods can create keys for their stratagems more easily,
+     * since the key is based on the ModConstants.id()
+     * @param name
+     * @return
+     */
+    public static ResourceKey<Stratagem> createKey(String name)
     {
         return ResourceKey.create(ModRegistries.STRATAGEM, ModConstants.id(name));
     }
