@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Provider generating json file with a Stratagem instance
- * This is used by external mod to create json stratagem file when DataGeneration, under the data/stratagems/stratagem
+ * This is used by external mods to create json stratagem file when DataGeneration, under the data/stratagems/stratagem
  */
 public abstract class StratagemDataProvider implements DataProvider {
     private final PackOutput.PathProvider pathProvider;

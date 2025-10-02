@@ -3,8 +3,6 @@ package com.stevekung.stratagems.registry;
 import java.util.List;
 import java.util.Optional;
 
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import com.stevekung.stratagems.action.*;
 import com.stevekung.stratagems.api.*;
 import com.stevekung.stratagems.api.action.EmptyAction;
@@ -12,7 +10,6 @@ import com.stevekung.stratagems.api.action.StratagemAction;
 import com.stevekung.stratagems.api.references.ModRegistries;
 import com.stevekung.stratagems.api.rule.*;
 
-import net.minecraft.Util;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -22,7 +19,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
