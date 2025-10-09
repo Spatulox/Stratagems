@@ -5,14 +5,7 @@
   },
   "display": {
     "type": "player_icon",
-    "player_icon": {
-      "properties": [
-        {
-          "name": "textures",
-          "value": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjZhNzZjYzIyZTdjMmFiOWM1NDBkMTI0NGVhZGJhNTgxZjVkZDllMThmOWFkYWNmMDUyODBhNWI0OGI4ZjYxOCJ9fX0"
-        }
-      ]
-    }
+    "texture": "stratagems:textures/stratagem/reinforcement.png"
   },
   "action": {
     "type": "stratagems:reinforce"

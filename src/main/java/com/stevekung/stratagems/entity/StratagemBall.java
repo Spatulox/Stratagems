@@ -1,5 +1,6 @@
 package com.stevekung.stratagems.entity;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.stevekung.stratagems.api.ModConstants;
@@ -13,8 +14,8 @@ import com.stevekung.stratagems.api.util.PacketUtils;
 import com.stevekung.stratagems.registry.ModEntities;
 import com.stevekung.stratagems.registry.Stratagems;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -33,6 +34,8 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
@@ -42,6 +45,14 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     private static final EntityDataAccessor<StratagemInstance.Side> DATA_STRATAGEM_SIDE = SynchedEntityData.defineId(StratagemBall.class, ModEntityDataSerializers.STRATAGEM_SIDE);
     private Item defaultItem = Items.SNOWBALL;
     private EntityType<?> customEntityType = null;
+
+    public enum ThrowableType {
+        ITEM, BLOCK, ENTITY, NONE
+    }
+    private static ThrowableType throwableType = ThrowableType.NONE;
+    private static Item item;
+    private static Block throwableBlock;
+    private static EntityType<?> entityType;
 
     public StratagemBall(EntityType<? extends StratagemBall> entityType, Level level)
     {
@@ -122,20 +133,36 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     @Override
     protected Item getDefaultItem()
     {
-        return this.defaultItem;
+        //return Items.SNOWBALL;
+        return StratagemBall.item != null ? StratagemBall.item : Items.SNOWBALL;
     }
 
-    public void setThrowable(Item item) {
-        this.defaultItem = item;
-        this.customEntityType = null;
+    public static void setThrowable(Item item) {
+        StratagemBall.throwableType = ThrowableType.ITEM;
+        StratagemBall.item = item;
+        StratagemBall.throwableBlock = null;
+        StratagemBall.entityType = null;
     }
 
-    public void setThrowable(EntityType<?> entityType) {
-        this.customEntityType = entityType;
+    public static void setThrowable(Block block) {
+        StratagemBall.throwableType = ThrowableType.BLOCK;
+        StratagemBall.throwableBlock = block;
+
+        Item item = BuiltInRegistries.ITEM.get(BuiltInRegistries.BLOCK.getKey(block));
+        if (item == Items.AIR) {
+            StratagemBall.item = Items.SNOWBALL;
+        } else {
+            StratagemBall.item = item;
+        }
+
+        StratagemBall.entityType = null;
     }
 
-    public EntityType<?> getCustomEntityType() {
-        return this.customEntityType;
+    public static void setThrowable(EntityType<?> entityType) {
+        StratagemBall.throwableType = ThrowableType.ENTITY;
+        StratagemBall.entityType = entityType;
+        StratagemBall.throwableBlock = null;
+        StratagemBall.item = null;
     }
 
     @Override
@@ -148,55 +175,73 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     }
 
     @Override
-    protected void onHit(HitResult result) {
-        super.onHit(result);
-
-        if (this.level() instanceof ServerLevel serverLevel) {
-
-            if (customEntityType != null) {
-                Entity customEntity = customEntityType.create(serverLevel);
-                if (customEntity != null) {
-                    customEntity.moveTo(this.blockPosition(), this.getYRot(), this.getXRot());
-                    serverLevel.addFreshEntity(customEntity);
+    protected void onHit(HitResult result)
+    {
+        try {
+            super.onHit(result);
+            if (this.level() instanceof ServerLevel serverLevel)
+            {
+                var holder = this.getVariant();
+                var stratagemPod = new StratagemPod(ModEntities.STRATAGEM_POD, this.level());
+                if (StratagemBall.throwableType == ThrowableType.BLOCK) {
+                    stratagemPod.setLinkedBlock(StratagemBall.throwableBlock);
                 }
-            }
 
-            var holder = this.getVariant();
-            var stratagemPod = new StratagemPod(ModEntities.STRATAGEM_POD, this.level());
-            stratagemPod.setVariant(holder);
-            stratagemPod.setOwner(this.getOwner());
-            stratagemPod.moveTo(this.blockPosition(), 0.0f, 0.0f);
+                stratagemPod.setVariant(holder);
+                stratagemPod.setOwner(this.getOwner());
+                stratagemPod.moveTo(this.blockPosition(), 0.0f, 0.0f);
 
-            if (this.getOwner() instanceof ServerPlayer serverPlayer) {
-                var stratagemsData = this.getSide() == StratagemInstance.Side.SERVER
-                        ? serverLevel.getServer().overworld().stratagemsData()
-                        : serverPlayer.stratagemsData();
+                if (this.getOwner() instanceof ServerPlayer serverPlayer)
+                {
+                    var stratagemsData = this.getSide() == StratagemInstance.Side.SERVER ? serverLevel.getServer().overworld().stratagemsData() : serverPlayer.stratagemsData();
 
-                if (stratagemsData.canUse(holder, serverPlayer)) {
-                    stratagemsData.use(holder, serverPlayer);
-                    stratagemPod.setInboundTick(stratagemsData.instanceByHolder(holder).inboundDuration);
+                    if (stratagemsData.canUse(holder, serverPlayer))
+                    {
+                        stratagemsData.use(holder, serverPlayer);
+                        stratagemPod.setInboundTick(stratagemsData.instanceByHolder(holder).inboundDuration);
 
-                    if (this.getSide() == StratagemInstance.Side.SERVER) {
-                        PacketUtils.sendClientUpdatePacketS2P(this.getServer(),
-                                UpdateStratagemPacket.Action.UPDATE,
-                                stratagemsData.instanceByHolder(holder));
-                    } else {
-                        PacketUtils.sendClientUpdatePacket2P(serverPlayer,
-                                UpdateStratagemPacket.Action.UPDATE,
-                                stratagemsData.instanceByHolder(holder));
+                        if (this.getSide() == StratagemInstance.Side.SERVER)
+                        {
+                            PacketUtils.sendClientUpdatePacketS2P(this.getServer(), UpdateStratagemPacket.Action.UPDATE, stratagemsData.instanceByHolder(holder));
+                        }
+                        else
+                        {
+                            PacketUtils.sendClientUpdatePacket2P(serverPlayer, UpdateStratagemPacket.Action.UPDATE, stratagemsData.instanceByHolder(holder));
+                        }
                     }
-                } else {
-                    var instance = stratagemsData.instanceByHolder(holder);
-                    ModConstants.LOGGER.info("{}", Component.translatable("commands.stratagem.use.failed",
-                            instance.stratagem().name(), instance.state.getTranslationName()).getString());
+                    else
+                    {
+                        var instance = stratagemsData.instanceByHolder(holder);
+                        ModConstants.LOGGER.info("{}", Component.translatable("commands.stratagem.use.failed", instance.stratagem().name(), instance.state.getTranslationName()).getString());
+                    }
                 }
-            } else {
-                ModConstants.LOGGER.warn("Stratagem owner is {} rather than a player!", this.getOwner());
-            }
+                else
+                {
+                    ModConstants.LOGGER.warn("Stratagem owner is {} rather than a player!", this.getOwner());
+                }
 
-            this.level().addFreshEntity(stratagemPod);
-            this.playSound(StratagemSounds.STRATAGEM_LAND, 1f, 1.0f);
-            this.discard();
+                this.level().addFreshEntity(stratagemPod);
+
+                this.playSound(StratagemSounds.STRATAGEM_LAND, 1f, 1.0f);
+                this.discard();
+
+                switch (StratagemBall.throwableType) {
+                    case ITEM:
+                        break;
+                    case BLOCK:
+                        if (result.getType() == HitResult.Type.BLOCK && StratagemBall.throwableBlock != null) {
+                            serverLevel.setBlockAndUpdate(this.blockPosition(), StratagemBall.throwableBlock.defaultBlockState());
+                            stratagemPod.setBlockPosition(this.blockPosition());
+                        }
+                        break;
+                    case ENTITY:
+                        // TODO : Implement a thing for Entity
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } finally {
         }
     }
 }

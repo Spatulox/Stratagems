@@ -47,6 +47,7 @@ public class StratagemDataGenerator implements DataGeneratorEntrypoint
         builder.add(ModRegistries.STRATAGEM, Stratagems::bootstrap);
     }
 
+
     private static class DynamicRegistryProvider extends FabricDynamicRegistryProvider
     {
         public DynamicRegistryProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture)

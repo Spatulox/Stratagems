@@ -251,6 +251,9 @@ public class StratagemsClientMod implements ClientModInitializer
                     manager.setMenuOpen(false);
 
                     LOGGER.info("Select {}", manager.getSelected().stratagem().name().getString());
+                    if(!player.getTags().contains(ModConstants.Tag.HAS_STRATAGEM_HAND)) {
+                        player.addTag(ModConstants.Tag.HAS_STRATAGEM_HAND);
+                    }
                 }
             }
 
@@ -288,6 +291,9 @@ public class StratagemsClientMod implements ClientModInitializer
             ClientPlayNetworking.send(new SpawnStratagemPacket(manager.getSelected().getResourceKey(), manager.getSelected().side));
             manager.clearInputCode();
             manager.clearSelected();
+            if(player.getTags().contains(ModConstants.Tag.HAS_STRATAGEM_HAND)) {
+                player.removeTag(ModConstants.Tag.HAS_STRATAGEM_HAND);
+            }
         }
 
         if (fail)

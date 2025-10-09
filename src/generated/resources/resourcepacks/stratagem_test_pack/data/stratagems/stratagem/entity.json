@@ -1,0 +1,25 @@
+{
+  "code": "saswd",
+  "name": {
+    "translate": "stratagem.stratagems.entity"
+  },
+  "display": {
+    "type": "item",
+    "item": {
+      "count": 1,
+      "id": "minecraft:glass_bottle"
+    }
+  },
+  "action": {
+    "type": "stratagems:spawn_entity",
+    "id": "minecraft:zombie"
+  },
+  "rule": {
+    "type": "stratagems:default"
+  },
+  "properties": {
+    "beam_color": -9185281,
+    "cooldown": 6000,
+    "inbound_duration": 100
+  }
+}
