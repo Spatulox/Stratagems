@@ -8,9 +8,11 @@ import com.stevekung.stratagems.api.action.StratagemActionType;
 import com.stevekung.stratagems.registry.StratagemActionTypes;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 public record SpawnBlockAction(BlockState blockState) implements StratagemAction
 {
@@ -30,8 +32,10 @@ public record SpawnBlockAction(BlockState blockState) implements StratagemAction
         var level = context.level();
         BlockPos pos = context.blockPos();
 
+        var yRot = context.serverPlayer().yHeadRot;
+
         BlockState state = this.blockState;
-        state = state.rotate(Rotation.getRandom(context.random()));
+        state = state.setValue(BlockStateProperties.FACING,Direction.fromYRot(context.serverPlayer().yHeadRot));
         level.setBlockAndUpdate(pos, state);
 
         BlockEntity be = level.getBlockEntity(pos);

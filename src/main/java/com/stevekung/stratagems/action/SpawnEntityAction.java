@@ -8,12 +8,14 @@ import com.stevekung.stratagems.api.action.StratagemActionContext;
 import com.stevekung.stratagems.api.action.StratagemActionType;
 import com.stevekung.stratagems.registry.StratagemActionTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.apache.logging.log4j.core.util.Builder;
 
 public record SpawnEntityAction(EntityType<?> entityType, float height, boolean relativeHeight) implements StratagemAction
@@ -33,18 +35,19 @@ public record SpawnEntityAction(EntityType<?> entityType, float height, boolean 
         return new SpawnEntityAction(type, height, relative);
     }));
 
-    private static void spawnEntityD(Level level, EntityType<?> entityType, BlockPos pos, float height, boolean relative)
+    private static void spawnEntityD(StratagemActionContext context, EntityType<?> entityType, BlockPos pos, float height, boolean relative)
     {
+        var level = context.level();
         if (!level.isClientSide())
         {
             var entity = entityType.create(level);
             if (entity != null)
             {
-                int randomYaw = (int)(Math.random() * 361);
+                float yaw = Direction.fromYRot(context.serverPlayer().yHeadRot).toYRot();
 
                 double finalY = relative ? (pos.getY() + height) : height;
 
-                entity.moveTo(pos.getX() + 0.5, finalY, pos.getZ() + 0.5, randomYaw, 0);
+                entity.moveTo(pos.getX() + 0.5, finalY, pos.getZ() + 0.5, yaw, 0);
                 level.addFreshEntity(entity);
             }
         }
@@ -59,7 +62,7 @@ public record SpawnEntityAction(EntityType<?> entityType, float height, boolean 
     @Override
     public void action(StratagemActionContext context)
     {
-        spawnEntityD(context.level(), entityType, context.blockPos(), height, relativeHeight);
+        spawnEntityD(context, entityType, context.blockPos(), height, relativeHeight);
     }
 
     public static Builder spawnEntity(EntityType<?> entityType)
