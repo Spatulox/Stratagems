@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
  * @param level the world
  * @param blockPos block pos where to spawn the stratagem
  * @param random gen random number, probably for the loot chest ?
- * @param direction to the spawn direction of the block/entity. You can't use the serverPlayer.direction because it's linked to the owner of the stratagem, and live changing
+ * @param yRot to the spawn direction of the block/entity. You can't use the serverPlayer.direction because it's linked to the owner of the stratagem, and live changing
  */
-public record StratagemActionContext(ServerPlayer serverPlayer, ServerLevel level, BlockPos blockPos, RandomSource random, @Nullable Direction direction)
+public record StratagemActionContext(ServerPlayer serverPlayer, ServerLevel level, BlockPos blockPos, RandomSource random, @Nullable Float yRot)
 {}

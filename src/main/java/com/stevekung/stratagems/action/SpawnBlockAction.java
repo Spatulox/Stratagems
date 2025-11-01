@@ -32,7 +32,7 @@ public record SpawnBlockAction(BlockState blockState) implements StratagemAction
         var level = context.level();
         BlockPos pos = context.blockPos();
 
-        var yRot = context.direction() != null ? context.direction().toYRot() : Direction.NORTH.toYRot();
+        var yRot = context.yRot() != null ? -context.yRot() : Direction.NORTH.toYRot();
 
         BlockState state = this.blockState;
         state = state.setValue(BlockStateProperties.FACING,Direction.fromYRot(yRot));

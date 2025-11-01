@@ -627,7 +627,7 @@ public class StratagemCommands
 
         if (stratagemsData.canUse(holder, serverPlayer))
         {
-            var stratagemContext = new StratagemActionContext(serverPlayer, source.getLevel(), blockPos, source.getLevel().random, serverPlayer != null ? serverPlayer.getDirection() : null);
+            var stratagemContext = new StratagemActionContext(serverPlayer, source.getLevel(), blockPos, source.getLevel().random, serverPlayer != null ? serverPlayer.yHeadRot : null);
             holder.value().action().action(stratagemContext);
             stratagemsData.use(holder, serverPlayer);
         }

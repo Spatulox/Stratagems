@@ -44,7 +44,7 @@ public record SpawnEntityAction(EntityType<?> entityType, float height, boolean 
             if (entity != null)
             {
                 // For some reason, EAST/WESt are inverted, applaying *-1 helps it to be at the right angle
-                float yaw = context.direction() != null ? -context.direction().toYRot() : Direction.NORTH.toYRot(); // Should face the player, but don't, the entity face the same direction as the player for NORTH and SOUTH :/
+                float yaw = context.yRot() != null ? -context.yRot() : Direction.NORTH.toYRot(); // Should face the player, but don't, the entity face the same direction as the player for NORTH and SOUTH :/
                 double finalY = relative ? (pos.getY() + height) : height;
                 entity.moveTo(pos.getX() + 0.5, finalY, pos.getZ() + 0.5, yaw, 0.0f);
                 entity.setYRot(yaw);

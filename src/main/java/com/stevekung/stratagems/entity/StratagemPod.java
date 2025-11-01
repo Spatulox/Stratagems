@@ -50,7 +50,6 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
     {
         super(entityType, level);
         this.noCulling = true;
-        this.direction = Direction.NORTH;
     }
 
     public void setLinkedBlock(Block block) {
@@ -59,11 +58,6 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
 
     public void setBlockPosition(BlockPos blockpos) {
         this.linkedBlockPos = blockpos;
-    }
-
-    public void setDirection(Direction direction){
-        System.out.println(direction.name());
-        this.direction = direction;
     }
 
     @Override
@@ -84,7 +78,7 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
                 this.level().sendBlockUpdated(this.linkedBlockPos, this.linkedBlock.defaultBlockState(), Blocks.AIR.defaultBlockState(), 3);
             }
             var holder = this.getVariant();
-            var stratagemContext = new StratagemActionContext(serverPlayer, (ServerLevel) this.level(), this.blockPosition(), this.random, this.direction);
+            var stratagemContext = new StratagemActionContext(serverPlayer, (ServerLevel) this.level(), this.blockPosition(), this.random, this.getYRot());
             holder.value().action().action(stratagemContext);
             this.remove(RemovalReason.DISCARDED);
         }

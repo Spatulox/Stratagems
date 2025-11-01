@@ -63,12 +63,24 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     public StratagemBall(Level level, LivingEntity shooter)
     {
         super(ModEntities.STRATAGEM_BALL, shooter, level);
-        this.setYRot(shooter.getYRot());
+        this.setYRot(shooter.getYHeadRot());
     }
 
     public StratagemBall(Level level, double x, double y, double z)
     {
         super(ModEntities.STRATAGEM_BALL, x, y, z, level);
+    }
+
+    private float getOppositeYRot(){
+        float yaw = this.getYRot() - 180.0f;
+
+        // Stay in [-180,180]
+        if (yaw < -180.0f) {
+            yaw += 360.0f;
+        } else if (yaw > 180.0f) {
+            yaw -= 360.0f;
+        }
+        return yaw;
     }
 
     @Override
@@ -185,7 +197,6 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
             {
                 var holder = this.getVariant();
                 var stratagemPod = new StratagemPod(ModEntities.STRATAGEM_POD, this.level());
-                stratagemPod.setDirection(this.getDirection().getOpposite());
                 switch (StratagemBall.throwableType) {
                     case ITEM:
                         // TODO
@@ -201,7 +212,8 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
 
                 stratagemPod.setVariant(holder);
                 stratagemPod.setOwner(this.getOwner());
-                stratagemPod.moveTo(this.blockPosition(), 0.0f, 0.0f);
+
+                stratagemPod.moveTo(this.blockPosition(), this.getOppositeYRot(), 0.0f);
 
                 if (this.getOwner() instanceof ServerPlayer serverPlayer)
                 {
