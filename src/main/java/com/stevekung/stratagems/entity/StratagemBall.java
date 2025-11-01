@@ -15,6 +15,7 @@ import com.stevekung.stratagems.registry.ModEntities;
 import com.stevekung.stratagems.registry.Stratagems;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -62,6 +63,7 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
     public StratagemBall(Level level, LivingEntity shooter)
     {
         super(ModEntities.STRATAGEM_BALL, shooter, level);
+        this.setYRot(shooter.getYRot());
     }
 
     public StratagemBall(Level level, double x, double y, double z)
@@ -183,8 +185,18 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
             {
                 var holder = this.getVariant();
                 var stratagemPod = new StratagemPod(ModEntities.STRATAGEM_POD, this.level());
-                if (StratagemBall.throwableType == ThrowableType.BLOCK) {
-                    stratagemPod.setLinkedBlock(StratagemBall.throwableBlock);
+                stratagemPod.setDirection(this.getDirection().getOpposite());
+                switch (StratagemBall.throwableType) {
+                    case ITEM:
+                        // TODO
+                        break;
+                    case BLOCK:
+                        stratagemPod.setLinkedBlock(StratagemBall.throwableBlock);
+                    case ENTITY:
+                        // TODO
+                        break;
+                    default:
+                        break;
                 }
 
                 stratagemPod.setVariant(holder);
@@ -227,6 +239,7 @@ public class StratagemBall extends ThrowableItemProjectile implements VariantHol
 
                 switch (StratagemBall.throwableType) {
                     case ITEM:
+                        // Nothing to do
                         break;
                     case BLOCK:
                         if (result.getType() == HitResult.Type.BLOCK && StratagemBall.throwableBlock != null) {

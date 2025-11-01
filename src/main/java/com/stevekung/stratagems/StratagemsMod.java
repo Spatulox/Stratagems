@@ -88,7 +88,7 @@ public class StratagemsMod implements ModInitializer
 
             if (stratagemsData.canUse(holder, player))
             {
-                var stratagemContext = new StratagemActionContext(player, level, payload.blockPos(), level.random);
+                var stratagemContext = new StratagemActionContext(player, level, payload.blockPos(), level.random, null);
                 holder.value().action().action(stratagemContext);
                 stratagemsData.use(holder, player);
 

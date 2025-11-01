@@ -4,8 +4,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.stevekung.stratagems.api.ModConstants;
@@ -37,6 +39,7 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
     @Nullable
     private Entity cachedOwner;
     private int inboundTick;
+    private Direction direction;
 
     @Nullable
     private Block linkedBlock;
@@ -47,8 +50,8 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
     {
         super(entityType, level);
         this.noCulling = true;
+        this.direction = Direction.NORTH;
     }
-
 
     public void setLinkedBlock(Block block) {
         this.linkedBlock = block;
@@ -56,6 +59,11 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
 
     public void setBlockPosition(BlockPos blockpos) {
         this.linkedBlockPos = blockpos;
+    }
+
+    public void setDirection(Direction direction){
+        System.out.println(direction.name());
+        this.direction = direction;
     }
 
     @Override
@@ -76,7 +84,7 @@ public class StratagemPod extends Entity implements VariantHolder<Holder<Stratag
                 this.level().sendBlockUpdated(this.linkedBlockPos, this.linkedBlock.defaultBlockState(), Blocks.AIR.defaultBlockState(), 3);
             }
             var holder = this.getVariant();
-            var stratagemContext = new StratagemActionContext(serverPlayer, (ServerLevel) this.level(), this.blockPosition(), this.random);
+            var stratagemContext = new StratagemActionContext(serverPlayer, (ServerLevel) this.level(), this.blockPosition(), this.random, this.direction);
             holder.value().action().action(stratagemContext);
             this.remove(RemovalReason.DISCARDED);
         }
