@@ -1,6 +1,5 @@
 package com.stevekung.stratagems.action;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.stevekung.stratagems.api.action.StratagemAction;
@@ -14,44 +13,57 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import org.apache.logging.log4j.core.util.Builder;
 
-public record SpawnEntityAction(EntityType<?> entityType, float height, boolean relativeHeight) implements StratagemAction
+public record SpawnEntityAction(
+        EntityType<?> entityType,
+        StratagemOffset decalage
+) implements StratagemAction
 {
     public static final MapCodec<SpawnEntityAction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             ResourceLocation.CODEC.fieldOf("id")
                     .forGetter(action -> BuiltInRegistries.ENTITY_TYPE.getKey(action.entityType())),
-            Codec.FLOAT.optionalFieldOf("height", 0.0f)
-                    .forGetter(SpawnEntityAction::height),
-            Codec.BOOL.optionalFieldOf("relative", false)
-                    .forGetter(SpawnEntityAction::relativeHeight)
-    ).apply(instance, (id, height, relative) -> {
+            StratagemOffset.CODEC.optionalFieldOf("decalage", StratagemOffset.EMPTY)
+                    .forGetter(SpawnEntityAction::decalage)
+    ).apply(instance, (id, decalage) -> {
         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceKey.create(Registries.ENTITY_TYPE, id));
         if (type == null) {
             throw new IllegalArgumentException("Unknown entity type: " + id);
         }
-        return new SpawnEntityAction(type, height, relative);
+        return new SpawnEntityAction(type, decalage);
     }));
 
-    private static void spawnEntityD(StratagemActionContext context, EntityType<?> entityType, BlockPos pos, float height, boolean relative)
+
+    private static void spawnEntityD(
+            StratagemActionContext context,
+            EntityType<?> entityType,
+            BlockPos pos,
+            StratagemOffset decalage)
     {
         var level = context.level();
-        if (!level.isClientSide())
-        {
-            var entity = entityType.create(level);
-            if (entity != null)
-            {
-                // For some reason, EAST/WESt are inverted, applaying *-1 helps it to be at the right angle
-                float yaw = context.yRot() != null ? -context.yRot() : Direction.NORTH.toYRot(); // Should face the player, but don't, the entity face the same direction as the player for NORTH and SOUTH :/
-                double finalY = relative ? (pos.getY() + height) : height;
-                entity.moveTo(pos.getX() + 0.5, finalY, pos.getZ() + 0.5, yaw, 0.0f);
-                entity.setYRot(yaw);
-                entity.setYHeadRot(yaw);
-                level.addFreshEntity(entity);
-            }
-        }
+        if (level.isClientSide()) return;
+
+        var entity = entityType.create(level);
+        if (entity == null) return;
+
+        float baseYaw = context.yRot() != null ? -context.yRot() : Direction.NORTH.toYRot();
+        float finalYaw = decalage.yaw() + baseYaw;
+        float finalPitch = decalage.pitch();
+
+        float yawRad = (float) Math.toRadians(finalYaw);
+
+        float horizontalOffset = decalage.forward() - decalage.backward();
+        double offsetX = Math.sin(yawRad) * horizontalOffset;
+        double offsetZ = -Math.cos(yawRad) * horizontalOffset;
+        float verticalOffset = decalage.upward() - decalage.downward();
+
+        double finalY = pos.getY() + verticalOffset;
+
+        entity.moveTo(pos.getX() + 0.5 + offsetX, finalY, pos.getZ() + 0.5 + offsetZ, finalYaw, finalPitch);
+        entity.setYRot(finalYaw);
+        entity.setXRot(finalPitch);
+        entity.setYHeadRot(finalYaw);
+
+        level.addFreshEntity(entity);
     }
 
     @Override
@@ -61,18 +73,15 @@ public record SpawnEntityAction(EntityType<?> entityType, float height, boolean 
     }
 
     @Override
-    public void action(StratagemActionContext context)
-    {
-        spawnEntityD(context, entityType, context.blockPos(), height, relativeHeight);
+    public void action(StratagemActionContext context) {
+        spawnEntityD(context, entityType, context.blockPos(), decalage);
     }
 
-    public static Builder spawnEntity(EntityType<?> entityType)
-    {
-        return () -> new SpawnEntityAction(entityType, 0.1f, true);
+    public static Builder spawnEntity(EntityType<?> entityType) {
+        return () -> new SpawnEntityAction(entityType, StratagemOffset.EMPTY);
     }
 
-    public static Builder spawnEntity(EntityType<?> entityType, double height, boolean relative)
-    {
-        return () -> new SpawnEntityAction(entityType, (float)height, relative);
+    public static Builder spawnEntity(EntityType<?> entityType, StratagemOffset decalage) {
+        return () -> new SpawnEntityAction(entityType, decalage);
     }
 }
