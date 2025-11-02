@@ -51,7 +51,7 @@ public record SpawnEntityAction(
 
         float yawRad = (float) Math.toRadians(finalYaw);
 
-        float horizontalOffset = decalage.forward() - decalage.backward();
+        float horizontalOffset = - (decalage.forward() - decalage.backward());
         double offsetX = Math.sin(yawRad) * horizontalOffset;
         double offsetZ = -Math.cos(yawRad) * horizontalOffset;
         float verticalOffset = decalage.upward() - decalage.downward();
@@ -64,6 +64,8 @@ public record SpawnEntityAction(
         entity.setYHeadRot(finalYaw);
 
         level.addFreshEntity(entity);
+        String posTag = String.format("original_position;x,y,z,yaw,pitch;%d:%d:%d:%f:%f", pos.getX(), pos.getY(), pos.getZ(), finalYaw, finalPitch);
+        entity.addTag(posTag);
     }
 
     @Override
