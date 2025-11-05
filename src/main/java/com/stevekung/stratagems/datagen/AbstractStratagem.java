@@ -8,12 +8,20 @@ import com.stevekung.stratagems.api.action.StratagemAction;
 import com.stevekung.stratagems.api.rule.StratagemRule;
 import net.minecraft.network.chat.Component;
 
+import java.util.Map;
+
 public abstract class AbstractStratagem {
 
     /**
      * You can rename this MOD_ID as you wish, it's only used to create the translation key
      */
     public static final String MOD_ID = ModConstants.MOD_ID;
+
+    /**
+     * Map<String, String> for translation
+     * @return
+     */
+    public abstract Map<String, String> NAME();
 
     /**
      * String of you stratagem register in the registry
