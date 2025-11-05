@@ -1,5 +1,6 @@
 package com.stevekung.stratagems.datagen;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
@@ -15,9 +16,9 @@ import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 /**
  * Provider generating json file with a Stratagem instance
@@ -25,18 +26,18 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class StratagemDataProvider implements DataProvider {
     private final PackOutput.PathProvider pathProvider;
+    private final PackOutput.PathProvider langPathProvider;
     private final CompletableFuture<HolderLookup.Provider> registriesFuture;
     private final Codec<Stratagem> codec;
+    private final Map<String, JsonObject> translations = new HashMap<>();
 
     public StratagemDataProvider(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registriesFuture) {
         this.pathProvider = dataOutput.createRegistryElementsPathProvider(ModRegistries.STRATAGEM);
+        this.langPathProvider = dataOutput.createPathProvider(PackOutput.Target.RESOURCE_PACK, ModConstants.MOD_ID);
         this.registriesFuture = Objects.requireNonNull(registriesFuture);
         this.codec = Stratagem.DIRECT_CODEC;
     }
 
-    /**
-     * Implémenter pour générer les stratagems via le builder.
-     */
     public abstract void generateStratagems(StratagemBuilder builder, HolderLookup.Provider registryLookup) throws Exception;
 
     @Override
@@ -46,11 +47,19 @@ public abstract class StratagemDataProvider implements DataProvider {
         return registriesFuture.thenCompose(lookup -> {
             RegistryOps<JsonElement> ops = lookup.createSerializationContext(JsonOps.INSTANCE);
 
-            StratagemBuilder builder = (name, stratagem) -> {
-                DataResult<JsonElement> result = codec.encodeStart(ops, stratagem);
+            StratagemBuilder builder = (stratagem) -> {
+                DataResult<JsonElement> result = codec.encodeStart(ops, stratagem.STRATAGEM());
                 JsonElement json = result.getOrThrow();
-                if (entries.put(ModConstants.id(name), json) != null) {
-                    throw new IllegalArgumentException("Duplicate stratagem entry " + name);
+                if (entries.put(ModConstants.id(stratagem.KEY_STRING()), json) != null) {
+                    throw new IllegalArgumentException("Duplicate stratagem entry " + stratagem.KEY_STRING());
+                }
+
+                if (stratagem.NAME() instanceof Map<?, ?> map) {
+                    map.forEach((lang, value) -> {
+                        String langKey = ((String) lang).toLowerCase(Locale.ROOT).replace('-', '_');
+                        JsonObject langJson = translations.computeIfAbsent(langKey, (x) -> new JsonObject());
+                        langJson.addProperty(ModConstants.MOD_ID + ".stratagem." + stratagem.KEY_STRING(), value.toString());
+                    });
                 }
             };
 
@@ -66,7 +75,17 @@ public abstract class StratagemDataProvider implements DataProvider {
                         return DataProvider.saveStable(output, entry.getValue(), path);
                     }).toArray(CompletableFuture[]::new);
 
-            return CompletableFuture.allOf(futures);
+            CompletableFuture<?>[] translationFutures = translations.entrySet().stream()
+                    .map(entry -> {
+                        // We put "" because the langPathProvider already provide the "stratagems/"
+                        ResourceLocation langLocation = ResourceLocation.fromNamespaceAndPath("", "lang/" + entry.getKey());
+                        Path path = langPathProvider.json(langLocation);
+                        return DataProvider.saveStable(output, entry.getValue(), path);
+                    })
+                    .toArray(CompletableFuture[]::new);
+
+            return CompletableFuture.allOf(Stream.concat(Arrays.stream(futures), Arrays.stream(translationFutures))
+                    .toArray(CompletableFuture[]::new));
         });
     }
 
@@ -82,6 +101,6 @@ public abstract class StratagemDataProvider implements DataProvider {
 
     @FunctionalInterface
     public interface StratagemBuilder {
-        void add(String name, Stratagem stratagem) throws Exception;
+        void add(AbstractStratagem stratagem) throws Exception;
     }
 }
