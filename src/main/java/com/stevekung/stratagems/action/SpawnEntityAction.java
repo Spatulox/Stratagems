@@ -2,6 +2,7 @@ package com.stevekung.stratagems.action;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.stevekung.stratagems.api.ModConstants;
 import com.stevekung.stratagems.api.action.StratagemAction;
 import com.stevekung.stratagems.api.action.StratagemActionContext;
 import com.stevekung.stratagems.api.action.StratagemActionType;
@@ -16,20 +17,20 @@ import net.minecraft.world.entity.EntityType;
 
 public record SpawnEntityAction(
         EntityType<?> entityType,
-        StratagemOffset decalage
+        StratagemOffset offset
 ) implements StratagemAction
 {
     public static final MapCodec<SpawnEntityAction> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             ResourceLocation.CODEC.fieldOf("id")
                     .forGetter(action -> BuiltInRegistries.ENTITY_TYPE.getKey(action.entityType())),
-            StratagemOffset.CODEC.optionalFieldOf("decalage", StratagemOffset.EMPTY)
-                    .forGetter(SpawnEntityAction::decalage)
-    ).apply(instance, (id, decalage) -> {
+            StratagemOffset.CODEC.optionalFieldOf("offset", StratagemOffset.EMPTY)
+                    .forGetter(SpawnEntityAction::offset)
+    ).apply(instance, (id, offset) -> {
         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceKey.create(Registries.ENTITY_TYPE, id));
         if (type == null) {
             throw new IllegalArgumentException("Unknown entity type: " + id);
         }
-        return new SpawnEntityAction(type, decalage);
+        return new SpawnEntityAction(type, offset);
     }));
 
 
@@ -56,16 +57,17 @@ public record SpawnEntityAction(
         double offsetZ = -Math.cos(yawRad) * horizontalOffset;
         float verticalOffset = decalage.upward() - decalage.downward();
 
+        double finalX = pos.getX() + 0.5 + offsetX;
         double finalY = pos.getY() + verticalOffset;
+        double finalZ = pos.getZ() + 0.5 + offsetZ;
 
-        entity.moveTo(pos.getX() + 0.5 + offsetX, finalY, pos.getZ() + 0.5 + offsetZ, finalYaw, finalPitch);
+        entity.moveTo(finalX, finalY, finalZ, finalYaw, finalPitch);
         entity.setYRot(finalYaw);
         entity.setXRot(finalPitch);
         entity.setYHeadRot(finalYaw);
-
-        level.addFreshEntity(entity);
-        String posTag = String.format("original_position;x,y,z,yaw,pitch;%d:%d:%d:%f:%f", pos.getX(), pos.getY(), pos.getZ(), finalYaw, finalPitch);
+        String posTag = String.format("original_beacon_position;x,y,z,yaw,pitch;%d:%d:%d:%f:%f", pos.getX(), pos.getY(), pos.getZ(), finalYaw, finalPitch);
         entity.addTag(posTag);
+        level.addFreshEntity(entity);
     }
 
     @Override
@@ -76,14 +78,14 @@ public record SpawnEntityAction(
 
     @Override
     public void action(StratagemActionContext context) {
-        spawnEntityD(context, entityType, context.blockPos(), decalage);
+        spawnEntityD(context, entityType, context.blockPos(), offset);
     }
 
     public static Builder spawnEntity(EntityType<?> entityType) {
         return () -> new SpawnEntityAction(entityType, StratagemOffset.EMPTY);
     }
 
-    public static Builder spawnEntity(EntityType<?> entityType, StratagemOffset decalage) {
-        return () -> new SpawnEntityAction(entityType, decalage);
+    public static Builder spawnEntity(EntityType<?> entityType, StratagemOffset offset) {
+        return () -> new SpawnEntityAction(entityType, offset);
     }
 }
