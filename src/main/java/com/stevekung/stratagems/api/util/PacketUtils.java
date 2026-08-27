@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.stevekung.stratagems.api.StratagemInstance;
 import com.stevekung.stratagems.api.StratagemsData;
+import com.stevekung.stratagems.api.packet.CodeSessionStartedPacket;
 import com.stevekung.stratagems.api.packet.SetPlayerStratagemsPacket;
 import com.stevekung.stratagems.api.packet.SetServerStratagemsPacket;
 import com.stevekung.stratagems.api.packet.StratagemEntryData;
@@ -68,5 +69,14 @@ public class PacketUtils
         {
             serverPlayer.connection.send(new ClientboundCustomPayloadPacket(SetServerStratagemsPacket.create(stratagemsData)));
         }
+    }
+
+    /**
+     * Notify the client that a {@link com.stevekung.stratagems.api.receiver.StratagemCodeReceiver}
+     * session has started, so the client begins routing arrow-key presses to the remote receiver.
+     */
+    public static void sendCodeSessionStartedPacket(ServerPlayer serverPlayer)
+    {
+        serverPlayer.connection.send(new ClientboundCustomPayloadPacket(new CodeSessionStartedPacket()));
     }
 }

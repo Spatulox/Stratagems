@@ -6,12 +6,16 @@ import com.stevekung.stratagems.api.Stratagem;
 import com.stevekung.stratagems.api.StratagemInstance;
 import com.stevekung.stratagems.api.action.StratagemActionContext;
 import com.stevekung.stratagems.api.packet.*;
+import com.stevekung.stratagems.api.receiver.StratagemCodeHandler;
+import com.stevekung.stratagems.api.receiver.StratagemCodeReceiver;
+import com.stevekung.stratagems.api.receiver.StratagemCodeSessionManager;
 import com.stevekung.stratagems.api.references.ModEntityDataSerializers;
 import com.stevekung.stratagems.api.references.ModRegistries;
 import com.stevekung.stratagems.api.references.StratagemRules;
 import com.stevekung.stratagems.api.references.StratagemSounds;
 import com.stevekung.stratagems.api.util.PacketUtils;
 import com.stevekung.stratagems.command.StratagemCommands;
+import com.stevekung.stratagems.dev.DemoCodeReceiver;
 import com.stevekung.stratagems.entity.StratagemBall;
 import com.stevekung.stratagems.registry.ModEntities;
 import com.stevekung.stratagems.registry.StratagemActionTypes;
@@ -20,6 +24,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistryView;
@@ -31,8 +37,10 @@ import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
 
 public class StratagemsMod implements ModInitializer
 {
@@ -45,16 +53,24 @@ public class StratagemsMod implements ModInitializer
         StratagemActionTypes.init();
         StratagemRules.init();
 
+        if (FabricLoader.getInstance().isDevelopmentEnvironment())
+        {
+            DemoCodeReceiver.register();
+        }
+
         DynamicRegistries.registerSynced(ModRegistries.STRATAGEM, Stratagem.DIRECT_CODEC, DynamicRegistries.SyncOption.SKIP_WHEN_EMPTY);
         DynamicRegistrySetupCallback.EVENT.register(StratagemsMod::addListenerForDynamic);
 
         PayloadTypeRegistry.playC2S().register(SpawnStratagemPacket.TYPE, SpawnStratagemPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(UseReplenishStratagemPacket.TYPE, UseReplenishStratagemPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(PlayStratagemInputSoundPacket.TYPE, PlayStratagemInputSoundPacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(AppendCodeCharPacket.TYPE, AppendCodeCharPacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(CancelCodeSessionPacket.TYPE, CancelCodeSessionPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(SetPlayerStratagemsPacket.TYPE, SetPlayerStratagemsPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(SetServerStratagemsPacket.TYPE, SetServerStratagemsPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateStratagemPacket.TYPE, UpdateStratagemPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(ClearStratagemsPacket.TYPE, ClearStratagemsPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(CodeSessionStartedPacket.TYPE, CodeSessionStartedPacket.CODEC);
 
         FabricLoader.getInstance().getModContainer(ModConstants.MOD_ID)
                 .map(container -> ResourceManagerHelper.registerBuiltinResourcePack(ModConstants.id("stratagem_test_pack"), container, Component.translatable("dataPack.stratagem_test_pack.name"), ResourcePackActivationType.NORMAL))
@@ -122,6 +138,35 @@ public class StratagemsMod implements ModInitializer
             }
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(AppendCodeCharPacket.TYPE, (payload, context) ->
+                StratagemCodeSessionManager.handleAppend(context.player(), payload.character()));
+
+        ServerPlayNetworking.registerGlobalReceiver(CancelCodeSessionPacket.TYPE, (payload, context) ->
+                StratagemCodeSessionManager.handleCancel(context.player(), StratagemCodeHandler.CancelReason.PLAYER_CANCELLED));
+
+        UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) ->
+        {
+            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer && entity instanceof StratagemCodeReceiver receiver)
+            {
+                StratagemCodeSessionManager.startSession(serverPlayer, receiver, entity, null);
+                PacketUtils.sendCodeSessionStartedPacket(serverPlayer);
+                return InteractionResult.CONSUME;
+            }
+            return InteractionResult.PASS;
+        });
+
+        UseBlockCallback.EVENT.register((player, level, hand, hitResult) ->
+        {
+            var pos = hitResult.getBlockPos();
+            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer && level.getBlockEntity(pos) instanceof StratagemCodeReceiver receiver)
+            {
+                StratagemCodeSessionManager.startSession(serverPlayer, receiver, null, pos);
+                PacketUtils.sendCodeSessionStartedPacket(serverPlayer);
+                return InteractionResult.CONSUME;
+            }
+            return InteractionResult.PASS;
+        });
+
         CommandRegistrationCallback.EVENT.register((dispatcher, context, selection) -> StratagemCommands.register(dispatcher, context));
 
         ServerLifecycleEvents.SERVER_STARTED.register(server ->
@@ -144,6 +189,9 @@ public class StratagemsMod implements ModInitializer
             ModConstants.LOGGER.info("Send player stratagem packet to {} in total {}", player.getName().getString(), playerStratagems.size());
         });
 
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                StratagemCodeSessionManager.handleCancel(handler.getPlayer(), StratagemCodeHandler.CancelReason.DISCONNECTED));
+
         ServerTickEvents.START_SERVER_TICK.register(server ->
         {
             server.getProfiler().push("stratagemServer");
@@ -151,6 +199,7 @@ public class StratagemsMod implements ModInitializer
             if (server.tickRateManager().runsNormally())
             {
                 server.overworld().stratagemsData().tick();
+                StratagemCodeSessionManager.tickAll(server);
             }
 
             server.getProfiler().pop();

@@ -149,6 +149,9 @@ public class StratagemsClientMod implements ClientModInitializer
                 }
             }
         });
+
+        ClientPlayNetworking.registerGlobalReceiver(CodeSessionStartedPacket.TYPE, (payload, context) ->
+                StratagemCodeSessionClient.setLinked(true));
     }
 
     private static void clientTick(Minecraft minecraft)
@@ -169,6 +172,32 @@ public class StratagemsClientMod implements ClientModInitializer
         }
 
         minecraft.getProfiler().pop();
+
+        if (StratagemCodeSessionClient.isLinked())
+        {
+            if (KeyBindings.OPEN_STRATAGEMS_MENU.consumeClick())
+            {
+                ClientPlayNetworking.send(new CancelCodeSessionPacket());
+                StratagemCodeSessionClient.setLinked(false);
+            }
+            else if (KeyBindings.STRATAGEMS_UP.consumeClick())
+            {
+                ClientPlayNetworking.send(new AppendCodeCharPacket('w'));
+            }
+            else if (KeyBindings.STRATAGEMS_DOWN.consumeClick())
+            {
+                ClientPlayNetworking.send(new AppendCodeCharPacket('s'));
+            }
+            else if (KeyBindings.STRATAGEMS_LEFT.consumeClick())
+            {
+                ClientPlayNetworking.send(new AppendCodeCharPacket('a'));
+            }
+            else if (KeyBindings.STRATAGEMS_RIGHT.consumeClick())
+            {
+                ClientPlayNetworking.send(new AppendCodeCharPacket('d'));
+            }
+            return;
+        }
 
         var manager = StratagemInputManager.getInstance();
 
